@@ -1,7 +1,11 @@
+import { DEFAULT_LANGUAGE, LANGUAGE_CONFIG } from "./config.ts";
 import type { Language, TranslationValues } from "../types/locale.types";
 
+const isSupportedLanguage = (value: unknown): value is Language =>
+  typeof value === "string" && Object.hasOwn(LANGUAGE_CONFIG, value);
+
 export const resolveLanguage = (savedLanguage: unknown): Language =>
-  savedLanguage === "hi" ? "hi" : "en";
+  isSupportedLanguage(savedLanguage) ? savedLanguage : DEFAULT_LANGUAGE;
 
 export const translateMessage = (
   catalog: Readonly<Record<string, string>>,
@@ -25,7 +29,7 @@ export const readLanguagePreference = (
   try {
     return resolveLanguage(readPreference());
   } catch {
-    return "en";
+    return DEFAULT_LANGUAGE;
   }
 };
 
