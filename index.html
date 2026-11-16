@@ -2,8 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Apply the saved theme before the page paints; key matches constants/theme.ts.
+      (() => {
+        let preference;
+        try {
+          preference = localStorage.getItem("swt-theme");
+        } catch {}
+        const theme = preference === "dark" ? "dark" : "light";
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/src/assets/images/favicon.svg"
+    />
     <meta name="theme-color" content="#0b4938" />
     <meta
       name="description"

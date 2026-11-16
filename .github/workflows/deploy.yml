@@ -51,6 +51,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check code quality
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Check translation types
+        run: npm run test:types
+
       - name: Check membership consent and privacy
         run: npm test
 

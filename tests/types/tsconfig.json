@@ -1,0 +1,7 @@
+{
+  "extends": "../../tsconfig.app.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "../../node_modules/.tmp/tsconfig.locale-tests.tsbuildinfo"
+  },
+  "include": ["./locale.type-test.ts"]
+}

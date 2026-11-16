@@ -17,7 +17,7 @@ const headers = [
   "photoUrl",
 ];
 
-function backend(initialRows = [headers], options = {}) {
+const backend = (initialRows = [headers], options = {}) => {
   const rows = initialRows.map((row) => [...row]);
   let sheetExists = options.sheetExists !== false;
   const operations = {
@@ -134,7 +134,7 @@ function backend(initialRows = [headers], options = {}) {
       activeSpreadsheet = null;
     },
   };
-}
+};
 const applicant = {
   name: "Private Test Person",
   email: "private@example.com",

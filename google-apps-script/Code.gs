@@ -13,13 +13,13 @@ const MEMBER_COLUMNS = [
   "publicConsent",
 ];
 
-function jsonResponse_(data) {
+const jsonResponse_ = (data) => {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(
     ContentService.MimeType.JSON,
   );
-}
+};
 
-function spreadsheet_() {
+const spreadsheet_ = () => {
   const properties = PropertiesService.getScriptProperties();
   const savedId = properties.getProperty("SPREADSHEET_ID");
   if (savedId && savedId.trim()) return SpreadsheetApp.openById(savedId.trim());
@@ -34,16 +34,16 @@ function spreadsheet_() {
   }
   properties.setProperty("SPREADSHEET_ID", spreadsheet.getId());
   return spreadsheet;
-}
+};
 
-function sheetName_() {
+const sheetName_ = () => {
   return (
     PropertiesService.getScriptProperties().getProperty("MEMBER_SHEET_NAME") ||
     "Members"
   );
-}
+};
 
-function canonicalHeader_(value) {
+const canonicalHeader_ = (value) => {
   const key = String(value)
     .trim()
     .toLowerCase()
@@ -52,11 +52,11 @@ function canonicalHeader_(value) {
     { fullname: "name", emailaddress: "email", phonenumber: "phone" }[key] ||
     key
   );
-}
+};
 
-function columns_(headers) {
+const columns_ = (headers) => {
   const columns = {};
-  headers.forEach(function (header, index) {
+  headers.forEach((header, index) => {
     const key = canonicalHeader_(header);
     if (!key) return;
     if (Object.prototype.hasOwnProperty.call(columns, key)) {
@@ -65,14 +65,14 @@ function columns_(headers) {
     columns[key] = index;
   });
   return columns;
-}
+};
 
 /** Add missing columns to the right; never overwrite existing headers or rows. */
-function ensureColumns_(sheet) {
+const ensureColumns_ = (sheet) => {
   const width = sheet.getLastColumn();
   const headers = width ? sheet.getRange(1, 1, 1, width).getValues()[0] : [];
   const existing = columns_(headers);
-  const missing = MEMBER_COLUMNS.filter(function (name) {
+  const missing = MEMBER_COLUMNS.filter((name) => {
     return existing[canonicalHeader_(name)] === undefined;
   });
   if (missing.length) {
@@ -86,16 +86,16 @@ function ensureColumns_(sheet) {
   }
   sheet.setFrozenRows(1);
   return columns_(headers);
-}
+};
 
 /** Call while holding the script lock so concurrent requests cannot duplicate headers. */
-function ensureMemberSheet_() {
+const ensureMemberSheet_ = () => {
   const spreadsheet = spreadsheet_();
   const name = sheetName_();
   const sheet =
     spreadsheet.getSheetByName(name) || spreadsheet.insertSheet(name);
   return { sheet: sheet, columns: ensureColumns_(sheet) };
-}
+};
 
 /** Optional editor helper for initial authorization; requests also prepare the sheet. */
 function setupMembersSheet() {
@@ -109,22 +109,22 @@ function setupMembersSheet() {
   }
 }
 
-function displayConsent_(value) {
+const displayConsent_ = (value) => {
   // Blank and unrecognised legacy values always mean private.
   return (
     value === true ||
     (typeof value === "string" &&
       ["true", "yes"].indexOf(value.trim().toLowerCase()) !== -1)
   );
-}
+};
 
-function publicDirectory_(values) {
+const publicDirectory_ = (values) => {
   if (!values.length) return { success: true, totalCount: 0, members: [] };
   const columns = columns_(values[0]);
   if (columns.name === undefined) throw new Error("Missing name column.");
   let totalCount = 0;
   const members = [];
-  values.slice(1).forEach(function (row) {
+  values.slice(1).forEach((row) => {
     const name = String(row[columns.name] || "").trim();
     if (!name) return;
     totalCount += 1;
@@ -138,10 +138,10 @@ function publicDirectory_(values) {
   });
   // Only consenting names and the aggregate count may leave this backend.
   return { success: true, totalCount: totalCount, members: members };
-}
+};
 
 /** Read only the name and consent columns for the public directory. */
-function readPublicDirectory_(sheet) {
+const readPublicDirectory_ = (sheet) => {
   const width = sheet.getLastColumn();
   const columns = columns_(sheet.getRange(1, 1, 1, width).getValues()[0]);
   const rowCount = sheet.getLastRow() - 1;
@@ -151,11 +151,11 @@ function readPublicDirectory_(sheet) {
     .getRange(2, columns.publicconsent + 1, rowCount, 1)
     .getValues();
   const rows = [["name", "publicConsent"]];
-  names.forEach(function (row, index) {
+  names.forEach((row, index) => {
     rows.push([row[0], consents[index][0]]);
   });
   return publicDirectory_(rows);
-}
+};
 
 function doGet(e) {
   if (
@@ -177,7 +177,7 @@ function doGet(e) {
     const sheet = ensureMemberSheet_().sheet;
     SpreadsheetApp.flush();
     return jsonResponse_(readPublicDirectory_(sheet));
-  } catch (error) {
+  } catch {
     return jsonResponse_({
       success: false,
       message: "The member directory is temporarily unavailable.",
@@ -187,7 +187,7 @@ function doGet(e) {
   }
 }
 
-function validateApplication_(data) {
+const validateApplication_ = (data) => {
   if (!data || typeof data !== "object" || Array.isArray(data))
     return "Invalid request.";
   if (
@@ -205,7 +205,7 @@ function validateApplication_(data) {
   if (
     typeof data.phone !== "string" ||
     data.phone.trim().length > 20 ||
-    !/^[+0-9(). \-]+$/.test(data.phone.trim()) ||
+    !/^[+0-9(). -]+$/.test(data.phone.trim()) ||
     data.phone.replace(/\D/g, "").length < 7 ||
     data.phone.replace(/\D/g, "").length > 15
   )
@@ -213,13 +213,13 @@ function validateApplication_(data) {
   if (typeof data.publicConsent !== "boolean")
     return "Please choose Yes or No for public profile consent.";
   return "";
-}
+};
 
-function cellText_(value) {
+const cellText_ = (value) => {
   const text = String(value).trim();
   // Prevent submitted text being evaluated as a spreadsheet formula.
   return /^[=+@-]/.test(text) ? "'" + text : text;
-}
+};
 
 function doPost(e) {
   let data;
@@ -227,7 +227,7 @@ function doPost(e) {
     if (!e || !e.postData || e.postData.contents.length > 10000)
       throw new Error("Invalid body.");
     data = JSON.parse(e.postData.contents);
-  } catch (error) {
+  } catch {
     return jsonResponse_({ success: false, message: "Invalid request." });
   }
   const validation = validateApplication_(data);
@@ -244,7 +244,7 @@ function doPost(e) {
     const columns = prepared.columns;
     const values = sheet.getDataRange().getValues();
     const email = data.email.trim().toLowerCase();
-    const duplicate = values.slice(1).some(function (row) {
+    const duplicate = values.slice(1).some((row) => {
       return (
         String(row[columns.email] || "")
           .trim()
@@ -266,13 +266,13 @@ function doPost(e) {
       publicconsent: data.publicConsent,
     };
     const row = new Array(sheet.getLastColumn()).fill("");
-    Object.keys(record).forEach(function (key) {
+    Object.keys(record).forEach((key) => {
       row[columns[key]] = record[key];
     });
     sheet.appendRow(row);
     SpreadsheetApp.flush();
     return jsonResponse_({ success: true });
-  } catch (error) {
+  } catch {
     return jsonResponse_({
       success: false,
       message:

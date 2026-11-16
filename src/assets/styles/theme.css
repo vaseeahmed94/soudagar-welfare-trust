@@ -1,0 +1,87 @@
+/* Semantic colors shared by the page, loader, forms, and dialogs. */
+:root {
+  color-scheme: light;
+  --green: #07562d;
+  --deep: #003c25;
+  --gold: #c69d35;
+  --pale: #edf5eb;
+  --serif: "Lora", Georgia, serif;
+  --color-page: #fff;
+  --color-surface: #fffefa;
+  --color-surface-raised: #fff;
+  --color-surface-subtle: #f8f9f6;
+  --color-input: #fbfdf9;
+  --color-text: #152d24;
+  --color-text-muted: #53684f;
+  --color-heading: #06472b;
+  --color-accent: #967622;
+  --color-link: #07572f;
+  --color-border: #cad8c8;
+  --color-border-subtle: #e2e9de;
+  --color-focus: #397948;
+  --color-selected: #edf5e8;
+  --color-positive: #197638;
+  --color-danger: #a22b20;
+  --color-danger-surface: #fff2ef;
+  --color-danger-border: #e9c1b9;
+  --color-logo-leaf: #287a3d;
+  --color-logo-heart: #075332;
+  --color-spinner-track: #d6e5d4;
+  --color-spinner: #07562d;
+  --color-hero-heading: #063c25;
+  --color-hero-text: #152d24;
+  --color-hero-accent: #9b781d;
+  --background-loader: radial-gradient(
+    ellipse at center,
+    #fff 0%,
+    #edf5eb 100%
+  );
+  --background-quote: linear-gradient(130deg, #edf5ec, #e1efdd);
+  --background-stats: linear-gradient(110deg, #eef6eb, #eaf3e8);
+  --background-avatar: linear-gradient(135deg, #f0f7e8, #dbeacb);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --deep: #d7f0df;
+  --pale: #20372b;
+  --color-page: #101b17;
+  --color-surface: #17251e;
+  --color-surface-raised: #1b2c23;
+  --color-surface-subtle: #203228;
+  --color-input: #14221b;
+  --color-text: #e3ede6;
+  --color-text-muted: #b0c4b5;
+  --color-heading: #d7f0df;
+  --color-accent: #e2c475;
+  --color-link: #9cdbad;
+  --color-border: #486451;
+  --color-border-subtle: #344c3c;
+  --color-focus: #a9dfad;
+  --color-selected: #294533;
+  --color-positive: #9cdbad;
+  --color-danger: #ffb4b4;
+  --color-danger-surface: #3b2525;
+  --color-danger-border: #78504b;
+  --background-hero-overlay: linear-gradient(
+    90deg,
+    #10251be8,
+    #10251bca 55%,
+    #10251b50
+  );
+  --color-logo-leaf: #a3cb82;
+  --color-logo-heart: #ead69b;
+  --color-spinner-track: #344c3c;
+  --color-spinner: #9cdbad;
+  --color-hero-heading: #e1f4e6;
+  --color-hero-text: #e3ede6;
+  --color-hero-accent: #efd18a;
+  --background-loader: radial-gradient(
+    ellipse at center,
+    #20372b 0%,
+    #101b17 100%
+  );
+  --background-quote: linear-gradient(130deg, #20372b, #192d22);
+  --background-stats: linear-gradient(110deg, #20372b, #192d22);
+  --background-avatar: linear-gradient(135deg, #294533, #20372b);
+}

@@ -1,0 +1,22 @@
+/* Keep the site's existing reset while adopting Tailwind utilities. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@source "../../";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Semantic utilities resolve through the application's live theme tokens. */
+@theme inline {
+  --font-sans: "DM Sans", Arial, sans-serif;
+  --font-serif: var(--serif);
+  --color-canvas: var(--color-page);
+  --color-panel: var(--color-surface-raised);
+  --color-content: var(--color-text);
+  --color-muted: var(--color-text-muted);
+  --color-title: var(--color-heading);
+  --color-outline: var(--color-border);
+  --color-focus-ring: var(--color-focus);
+  --color-loading-track: var(--color-spinner-track);
+  --color-loading-indicator: var(--color-spinner);
+}
