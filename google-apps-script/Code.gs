@@ -418,10 +418,15 @@ const memberDetails_ = (data) => {
     "Contributions",
     CONTRIBUTION_COLUMNS,
   );
-  const contributionRows = contributions.sheet
+  const allContributionRows = contributions.sheet
     .getDataRange()
     .getValues()
-    .slice(1)
+    .slice(1);
+  const overallAmount = allContributionRows.reduce(
+    (total, row) => total + (Number(row[contributions.columns.amount]) || 0),
+    0,
+  );
+  const contributionRows = allContributionRows
     .filter(
       (row) => accessEmail_(row[contributions.columns.memberemail]) === email,
     )
@@ -444,11 +449,25 @@ const memberDetails_ = (data) => {
       amountSpent: row[activities.columns.amountspent],
       summaryFileUrl: row[activities.columns.summaryfileurl],
     }));
+  const totalSpent = activityRows.reduce(
+    (total, row) => total + (Number(row.amountSpent) || 0),
+    0,
+  );
+  const memberAmount = contributionRows.reduce(
+    (total, row) => total + (Number(row.amount) || 0),
+    0,
+  );
   return jsonResponse_({
     success: true,
     member: { name: memberRow[members.columns.name], email },
     contributions: contributionRows,
     activities: activityRows,
+    totals: {
+      memberAmount,
+      overallAmount,
+      totalSpent,
+      availableBalance: overallAmount - totalSpent,
+    },
   });
 };
 
@@ -474,7 +493,7 @@ const saveDonation_ = (data) => {
     const row = new Array(prepared.sheet.getLastColumn()).fill("");
     const record = {
       id: Utilities.getUuid(),
-      createdat: new Date().toISOString(),
+      createdat: displayTimestamp_(),
       name: cellText_(data.name),
       email: cellText_(data.email.trim().toLowerCase()),
       phone: cellText_(data.phone),
@@ -507,6 +526,13 @@ const scriptDate_ = () => {
     "yyyy-MM-dd",
   );
 };
+
+const displayTimestamp_ = () =>
+  Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone(),
+    "dd MMM yyyy, hh:mm a",
+  );
 
 const reminderMonth_ = (dateText) => dateText.slice(0, 7);
 
@@ -720,7 +746,7 @@ function processMonthlyReminderQueue() {
         );
         sheet
           .getRange(rowNumber, columns.sentat + 1, 1, 4)
-          .setValues([[new Date().toISOString(), "sent", attempts + 1, ""]]);
+          .setValues([[displayTimestamp_(), "sent", attempts + 1, ""]]);
         sent += 1;
       } catch (error) {
         const message =
@@ -899,7 +925,7 @@ const sendWelcomeEmail_ = (sheet, columns, name, email, rowNumber) => {
     if (columns.welcomeemailstatus !== undefined) {
       sheet
         .getRange(rowNumber, columns.welcomeemailstatus + 1, 1, 2)
-        .setValues([["sent", new Date().toISOString()]]);
+        .setValues([["sent", displayTimestamp_()]]);
     }
   } catch (error) {
     Logger.log(
@@ -957,7 +983,7 @@ function doPost(e) {
       });
     const record = {
       id: Utilities.getUuid(),
-      createdat: new Date().toISOString(),
+      createdat: displayTimestamp_(),
       name: cellText_(data.name),
       email: cellText_(email),
       phone: cellText_(data.phone),

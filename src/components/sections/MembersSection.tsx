@@ -72,7 +72,7 @@ const MembersSection = ({
         className="button button-outline button-small"
         onClick={() => onModalChange({ kind: "contributions" })}
       >
-        View my contributions <ArrowRight size={15} />
+        View contributions <ArrowRight size={15} />
       </button>
     </section>
   );

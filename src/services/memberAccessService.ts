@@ -18,6 +18,12 @@ export interface MemberDetails {
   member: { name: string; email: string };
   contributions: ContributionRecord[];
   activities: ActivityRecord[];
+  totals: {
+    memberAmount: number;
+    overallAmount: number;
+    totalSpent: number;
+    availableBalance: number;
+  };
 }
 
 const call = async (
