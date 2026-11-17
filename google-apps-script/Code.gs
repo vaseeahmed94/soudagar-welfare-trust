@@ -567,18 +567,20 @@ const monthlyReminderHtml_ = (name) => {
           <h1 style="margin:0 0 18px;color:#075c38;font-size:26px;line-height:1.2;">Hello ${safeName},</h1>
           <p style="margin:0 0 14px;font-size:16px;line-height:1.6;">This is your monthly contribution reminder from Soudagar Welfare Trust.</p>
           <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">Your continued support helps us build a more caring community.</p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0;border:1px solid #c9a64d;border-radius:14px;background:#063d2a;color:#ffffff;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:100%;table-layout:fixed;margin:22px 0;border:1px solid #c9a64d;border-radius:14px;background:#063d2a;color:#ffffff;">
             <tr>
-              <td style="padding:24px 20px;vertical-align:middle;">
+              <td style="display:block;width:100%;box-sizing:border-box;padding:20px 18px;vertical-align:middle;text-align:center;">
                 <p style="margin:0 0 8px;color:#e7c86b;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">SWT Donation Details</p>
-                <p style="margin:0;color:#ffffff;font-family:Georgia,serif;font-size:28px;font-weight:bold;line-height:1.1;">Small support,<br />meaningful change</p>
-                <p style="margin:14px 0 0;color:#e7c86b;font-size:30px;font-weight:bold;">₹30 / month</p>
+                <p style="margin:0;color:#ffffff;font-family:Georgia,serif;font-size:25px;font-weight:bold;line-height:1.1;">Small support,<br />meaningful change</p>
+                <p style="margin:10px 0 0;color:#e7c86b;font-size:27px;font-weight:bold;">₹30 / month</p>
                 <p style="margin:5px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
               </td>
-              <td width="42%" style="padding:18px 14px;vertical-align:middle;text-align:center;border-left:1px solid #c9a64d80;">
-                <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/swt-donation-qr.jpeg" alt="QR code for SWT donations" width="170" height="170" style="display:block;margin:0 auto 12px;background:#ffffff;border-radius:10px;" />
+              <td style="display:block;width:100%;box-sizing:border-box;padding:16px 14px 20px;vertical-align:middle;text-align:center;border-top:1px solid #c9a64d80;">
+                <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/swt-donation-qr.jpeg" alt="QR code for SWT donations" width="150" height="150" style="display:block;margin:0 auto 10px;background:#ffffff;border-radius:10px;" />
                 <p style="margin:0;color:#cfe4d2;font-size:12px;">UPI ID</p>
-                <p style="margin:3px 0 0;color:#e7c86b;font-size:14px;font-weight:bold;word-break:break-word;">7676979749@axl</p>
+                <p style="margin:3px 0 0;color:#e7c86b;font-size:14px;font-weight:bold;word-break:break-word;user-select:all;-webkit-user-select:all;">7676979749@axl</p>
+                <span style="display:inline-block;margin-top:10px;padding:8px 14px;border:1px solid #e7c86b;border-radius:999px;color:#e7c86b;font-size:12px;font-weight:bold;">Scan QR to pay</span>
+                <p style="margin:8px 0 0;color:#cfe4d2;font-size:11px;line-height:1.4;">Or tap and hold the UPI ID to copy it.</p>
               </td>
             </tr>
           </table>
@@ -614,7 +616,9 @@ const welcomeEmailHtml_ = (name) => {
             <p style="margin:4px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
             <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/swt-donation-qr.jpeg" alt="QR code for SWT donations" width="170" height="170" style="display:block;margin:14px auto 10px;background:#ffffff;border-radius:10px;" />
             <p style="margin:0;color:#cfe4d2;font-size:12px;">UPI ID</p>
-            <p style="margin:3px 0 0;color:#e7c86b;font-size:14px;font-weight:bold;word-break:break-word;">7676979749@axl</p>
+            <p style="margin:3px 0 0;color:#e7c86b;font-size:14px;font-weight:bold;word-break:break-word;user-select:all;-webkit-user-select:all;">7676979749@axl</p>
+            <span style="display:inline-block;margin-top:10px;padding:8px 14px;border:1px solid #e7c86b;border-radius:999px;color:#e7c86b;font-size:12px;font-weight:bold;">Scan QR to pay</span>
+            <p style="margin:8px 0 0;color:#cfe4d2;font-size:11px;line-height:1.4;">Or tap and hold the UPI ID to copy it.</p>
           </div>
           <p style="margin:0;font-size:15px;line-height:1.6;color:#5c7165;">If you did not submit this application, please contact the trust.</p>
           <div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;">
@@ -664,9 +668,14 @@ const queueMonthlyReminders_ = (today, month) => {
 };
 
 const sendMonthlyReminder_ = (name, email) => {
+  const currentMonth = Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone(),
+    "MMMM yyyy",
+  );
   MailApp.sendEmail({
     to: email,
-    subject: "Your monthly contribution reminder | Soudagar Welfare Trust",
+    subject: `Your monthly contribution reminder for ${currentMonth} | Soudagar Welfare Trust`,
     body: monthlyReminderBody_(name),
     htmlBody: monthlyReminderHtml_(name),
     name: "Soudagar Welfare Trust",
