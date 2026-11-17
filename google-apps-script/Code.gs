@@ -26,6 +26,14 @@ const REMINDER_COLUMNS = [
 ];
 const REMINDER_DAILY_SEND_LIMIT = 80;
 const REMINDER_RETRY_LIMIT = 3;
+const DONATION_COLUMNS = [
+  "id",
+  "createdAt",
+  "name",
+  "email",
+  "phone",
+  "amount",
+];
 
 const jsonResponse_ = (data) => {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(
@@ -185,6 +193,81 @@ const ensureReminderSheet_ = () => {
   };
 };
 
+const ensureDonationSheet_ = () => {
+  const spreadsheet = spreadsheet_();
+  const sheet =
+    spreadsheet.getSheetByName("Donations") ||
+    spreadsheet.insertSheet("Donations");
+  const width = sheet.getLastColumn();
+  const headers = width ? sheet.getRange(1, 1, 1, width).getValues()[0] : [];
+  const existing = columns_(headers);
+  const missing = DONATION_COLUMNS.filter(
+    (name) => existing[canonicalHeader_(name)] === undefined,
+  );
+  if (missing.length) {
+    const requiredWidth = width + missing.length;
+    const maximumWidth = sheet.getMaxColumns();
+    if (requiredWidth > maximumWidth)
+      sheet.insertColumnsAfter(maximumWidth, requiredWidth - maximumWidth);
+    sheet.getRange(1, width + 1, 1, missing.length).setValues([missing]);
+  }
+  sheet.setFrozenRows(1);
+  return {
+    sheet,
+    columns: columns_(
+      sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0],
+    ),
+  };
+};
+
+const validateDonation_ = (data) => {
+  const validation = validateApplication_({ ...data, publicConsent: false });
+  if (validation) return validation;
+  if (String(data.amount || "") !== "30")
+    return "Please use the supported donation amount.";
+  return "";
+};
+
+const saveDonation_ = (data) => {
+  const validation = validateDonation_(data);
+  if (validation) return jsonResponse_({ success: false, message: validation });
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000))
+    return jsonResponse_({
+      success: false,
+      message: "Donation registration is busy. Please try again shortly.",
+    });
+  try {
+    const prepared = ensureDonationSheet_();
+    const row = new Array(prepared.sheet.getLastColumn()).fill("");
+    const record = {
+      id: Utilities.getUuid(),
+      createdat: new Date().toISOString(),
+      name: cellText_(data.name),
+      email: cellText_(data.email.trim().toLowerCase()),
+      phone: cellText_(data.phone),
+      amount: "30",
+    };
+    Object.keys(record).forEach((key) => {
+      row[prepared.columns[key]] = record[key];
+    });
+    prepared.sheet.appendRow(row);
+    SpreadsheetApp.flush();
+    return jsonResponse_({ success: true });
+  } catch (error) {
+    Logger.log(
+      "Donation save failed: " +
+        (error && error.message ? error.message : "Unknown error"),
+    );
+    return jsonResponse_({
+      success: false,
+      message: "We could not save your donation details.",
+    });
+  } finally {
+    lock.releaseLock();
+  }
+};
+
 const scriptDate_ = () => {
   return Utilities.formatDate(
     new Date(),
@@ -252,11 +335,21 @@ const monthlyReminderHtml_ = (name) => {
           <h1 style="margin:0 0 18px;color:#075c38;font-size:26px;line-height:1.2;">Hello ${safeName},</h1>
           <p style="margin:0 0 14px;font-size:16px;line-height:1.6;">This is your monthly contribution reminder from Soudagar Welfare Trust.</p>
           <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">Your continued support helps us build a more caring community.</p>
-          <div style="margin:22px 0;padding:18px;text-align:center;border:1px solid #c9a64d;border-radius:12px;background:#075c38;color:#ffffff;">
-            <p style="margin:0 0 6px;color:#e7c86b;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">SWT Donation Details</p>
-            <p style="margin:0;color:#e7c86b;font-size:30px;font-weight:bold;">₹30 / month</p>
-            <p style="margin:4px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
-          </div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0;border:1px solid #c9a64d;border-radius:14px;background:#063d2a;color:#ffffff;">
+            <tr>
+              <td style="padding:24px 20px;vertical-align:middle;">
+                <p style="margin:0 0 8px;color:#e7c86b;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">SWT Donation Details</p>
+                <p style="margin:0;color:#ffffff;font-family:Georgia,serif;font-size:28px;font-weight:bold;line-height:1.1;">Small support,<br />meaningful change</p>
+                <p style="margin:14px 0 0;color:#e7c86b;font-size:30px;font-weight:bold;">₹30 / month</p>
+                <p style="margin:5px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
+              </td>
+              <td width="42%" style="padding:18px 14px;vertical-align:middle;text-align:center;border-left:1px solid #c9a64d80;">
+                <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/donation-qr.png" alt="QR code for SWT donations" width="130" height="130" style="display:block;margin:0 auto 12px;background:#ffffff;border-radius:8px;" />
+                <p style="margin:0;color:#cfe4d2;font-size:12px;">UPI ID</p>
+                <p style="margin:3px 0 0;color:#e7c86b;font-size:14px;font-weight:bold;word-break:break-word;">trustname@upi</p>
+              </td>
+            </tr>
+          </table>
           <p style="margin:0;font-size:15px;line-height:1.6;color:#5c7165;">If you have already made this month's contribution, please disregard this reminder.</p>
           <div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;">
             <p style="margin:0;font-size:15px;line-height:1.6;">With warm regards,</p>
@@ -287,6 +380,7 @@ const welcomeEmailHtml_ = (name) => {
             <p style="margin:0 0 6px;color:#e7c86b;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">SWT Donation Details</p>
             <p style="margin:0;color:#e7c86b;font-size:30px;font-weight:bold;">₹30 / month</p>
             <p style="margin:4px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
+            <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/donation-qr.png" alt="QR code for SWT donations" width="150" height="150" style="display:block;margin:14px auto 0;background:#ffffff;border-radius:8px;" />
           </div>
           <p style="margin:0;font-size:15px;line-height:1.6;color:#5c7165;">If you did not submit this application, please contact the trust.</p>
           <div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;">
@@ -586,6 +680,7 @@ function doPost(e) {
   } catch {
     return jsonResponse_({ success: false, message: "Invalid request." });
   }
+  if (data && data.type === "donation") return saveDonation_(data);
   const validation = validateApplication_(data);
   if (validation) return jsonResponse_({ success: false, message: validation });
   const lock = LockService.getScriptLock();

@@ -1,4 +1,5 @@
 export type ModalState =
+  | { kind: "donation" }
   | { kind: "welcome" }
   | { kind: "join" }
   | { kind: "activity"; index: number }

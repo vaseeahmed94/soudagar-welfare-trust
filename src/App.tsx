@@ -44,6 +44,7 @@ const App = () => {
   }, [isInitialLoading]);
 
   const handleJoin = () => setActiveModal({ kind: "join" });
+  const handleDonate = () => setActiveModal({ kind: "donation" });
   if (isInitialLoading) {
     return <PageLoader />;
   }
@@ -60,7 +61,7 @@ const App = () => {
             <AboutSection onModalChange={setActiveModal} />
             <ImpactVideoSection />
             <CommunityStatsSection memberDirectory={memberDirectory} />
-            <DonationDetailsSection />
+            <DonationDetailsSection onDonate={handleDonate} />
             <ActivitiesSection onModalChange={setActiveModal} />
             <div className="community-sections grid grid-cols-[1fr_1.08fr] gap-8">
               <MembersSection
