@@ -139,7 +139,7 @@ References: [Vite deployment guide](https://vite.dev/guide/static-deploy.html#gi
 - Responsive navigation, hero, mission, impact figures, five activity cards, members, gallery, testimonials, and footer.
 - Keyboard-accessible native dialogs, gallery controls, reduced-motion support, labelled inputs, and focus indicators.
 - Membership form with browser validation, Apps Script submission, a pending state, duplicate-submit prevention, and confirmed success or error feedback.
-- All photographs are included in `src/assets/images` and bundled by Vite with hashed URLs; fonts load from Google Fonts.
+- All photographs are included in `src/assets/images`, and community videos are included in `src/assets/media`; Vite bundles both with hashed URLs. Fonts load from Google Fonts.
 
 ## Before public launch
 
@@ -152,6 +152,7 @@ Membership applications are sent to the configured Apps Script backend. Verify i
 `src/App.tsx` assembles the page and coordinates member loading and navigation.
 
 - `src/assets/images/`: bundled photographs, favicon, and image attribution.
+- `src/assets/media/`: bundled video media used by the community impact section.
 - `src/assets/styles/`: Tailwind entry, theme tokens, and custom CSS.
 - `src/components/common/`: shared logo, spinner, and full-page loader.
 - `src/components/layout/`: header and footer.

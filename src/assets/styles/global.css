@@ -464,6 +464,57 @@
   color: #b8d5aa;
   opacity: 0.5;
 }
+.impact-video {
+  display: grid;
+  grid-template-columns: 1fr 0.82fr;
+  align-items: center;
+  gap: 42px;
+  margin: 6px 0 28px;
+  padding: 28px 34px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 24px;
+  background: linear-gradient(
+    135deg,
+    var(--color-surface-raised),
+    var(--color-surface-subtle)
+  );
+  box-shadow: 0 8px 24px #143a1a0d;
+}
+.impact-video-copy h2 {
+  max-width: 420px;
+  margin: 7px 0 12px;
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1.08;
+  color: var(--color-heading);
+}
+.impact-video-copy p {
+  max-width: 440px;
+  margin: 0 0 14px;
+  color: var(--color-text);
+  font-size: 15px;
+  line-height: 1.65;
+}
+.impact-video-note {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+.impact-video-frame {
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  border: 6px solid var(--color-surface-raised);
+  border-radius: 22px;
+  background: #0b3022;
+  box-shadow: 0 10px 24px #0b302230;
+}
+.impact-video-frame video {
+  display: block;
+  width: min(100%, 270px);
+  height: min(430px, 58vw);
+  min-height: 300px;
+  object-fit: cover;
+  background: #0b3022;
+}
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1236,6 +1287,13 @@
   .quote-card blockquote {
     font-size: 16px;
   }
+  .impact-video {
+    gap: 24px;
+    padding: 24px;
+  }
+  .impact-video-copy p {
+    font-size: 13px;
+  }
   .about-copy h2 {
     font-size: 22px;
   }
@@ -1674,6 +1732,22 @@
   .about-copy > p {
     font-size: 14px;
     line-height: 1.65;
+  }
+  .impact-video {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-top: 0;
+    padding: 22px;
+  }
+  .impact-video-copy h2 {
+    max-width: none;
+  }
+  .impact-video-copy p {
+    max-width: none;
+  }
+  .impact-video-frame video {
+    width: min(100%, 250px);
+    height: min(420px, 112vw);
   }
   .mission-list {
     font-size: 12px;

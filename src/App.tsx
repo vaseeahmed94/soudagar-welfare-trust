@@ -9,6 +9,7 @@ import SiteFooter from "./components/layout/SiteFooter";
 import AppDialog from "./components/dialogs/AppDialog";
 import HeroSection from "./components/sections/HeroSection";
 import AboutSection from "./components/sections/AboutSection";
+import ImpactVideoSection from "./components/sections/ImpactVideoSection";
 import CommunityStatsSection from "./components/sections/CommunityStatsSection";
 import ActivitiesSection from "./components/sections/ActivitiesSection";
 import MembersSection from "./components/sections/MembersSection";
@@ -42,6 +43,7 @@ const App = () => {
           <HeroSection onJoin={handleJoin} />
           <div className="container">
             <AboutSection onModalChange={setActiveModal} />
+            <ImpactVideoSection />
             <CommunityStatsSection memberDirectory={memberDirectory} />
             <ActivitiesSection onModalChange={setActiveModal} />
             <div className="community-sections grid grid-cols-[1fr_1.08fr] gap-8">
