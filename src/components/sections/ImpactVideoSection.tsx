@@ -11,6 +11,11 @@ const ImpactVideoSection = () => {
         <span className="eyebrow">{t("video.eyebrow")}</span>
         <h2 id="impact-video-heading">{t("video.heading")}</h2>
         <p>{t("video.description")}</p>
+        <div className="impact-video-values" aria-label={t("brand.values")}>
+          <span>{t("brand.humanity")}</span>
+          <span>{t("brand.service")}</span>
+          <span>{t("brand.unity")}</span>
+        </div>
         <span className="impact-video-note">{t("video.note")}</span>
       </div>
       <div className="impact-video-frame">
