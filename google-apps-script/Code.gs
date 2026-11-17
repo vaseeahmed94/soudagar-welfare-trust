@@ -216,6 +216,10 @@ const monthlyReminderBody_ = (name) => {
     "This is your monthly contribution reminder from Soudagar Welfare Trust.",
     "Your continued support helps us build a more caring community.",
     "",
+    "SWT Donation Details",
+    "₹30 / month",
+    "Just ₹1 a day can make a difference.",
+    "",
     "If you have already made this month's contribution, please disregard this reminder.",
     "For any questions, please reply to this email or contact the trust.",
     "",
@@ -248,6 +252,11 @@ const monthlyReminderHtml_ = (name) => {
           <h1 style="margin:0 0 18px;color:#075c38;font-size:26px;line-height:1.2;">Hello ${safeName},</h1>
           <p style="margin:0 0 14px;font-size:16px;line-height:1.6;">This is your monthly contribution reminder from Soudagar Welfare Trust.</p>
           <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">Your continued support helps us build a more caring community.</p>
+          <div style="margin:22px 0;padding:18px;text-align:center;border:1px solid #c9a64d;border-radius:12px;background:#075c38;color:#ffffff;">
+            <p style="margin:0 0 6px;color:#e7c86b;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">SWT Donation Details</p>
+            <p style="margin:0;color:#e7c86b;font-size:30px;font-weight:bold;">₹30 / month</p>
+            <p style="margin:4px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
+          </div>
           <p style="margin:0;font-size:15px;line-height:1.6;color:#5c7165;">If you have already made this month's contribution, please disregard this reminder.</p>
           <div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;">
             <p style="margin:0;font-size:15px;line-height:1.6;">With warm regards,</p>
@@ -274,6 +283,11 @@ const welcomeEmailHtml_ = (name) => {
           <h1 style="margin:0 0 18px;color:#075c38;font-size:26px;line-height:1.2;">Hello ${safeName},</h1>
           <p style="margin:0 0 14px;font-size:16px;line-height:1.6;">Thank you for joining Soudagar Welfare Trust.</p>
           <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">We have received your membership application and will review it shortly. We are grateful for your interest in serving our community together.</p>
+          <div style="margin:22px 0;padding:18px;text-align:center;border:1px solid #c9a64d;border-radius:12px;background:#075c38;color:#ffffff;">
+            <p style="margin:0 0 6px;color:#e7c86b;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">SWT Donation Details</p>
+            <p style="margin:0;color:#e7c86b;font-size:30px;font-weight:bold;">₹30 / month</p>
+            <p style="margin:4px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
+          </div>
           <p style="margin:0;font-size:15px;line-height:1.6;color:#5c7165;">If you did not submit this application, please contact the trust.</p>
           <div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;">
             <p style="margin:0;font-size:15px;line-height:1.6;">With warm regards,</p>
@@ -519,6 +533,10 @@ const welcomeEmail_ = (name, email) => {
     "",
     "Thank you for joining Soudagar Welfare Trust.",
     "We have received your membership application and will review it shortly.",
+    "",
+    "SWT Donation Details",
+    "₹30 / month",
+    "Just ₹1 a day can make a difference.",
     "",
     "If you did not submit this application, please contact the trust.",
     "",
