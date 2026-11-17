@@ -11,6 +11,8 @@ const MEMBER_COLUMNS = [
   "email",
   "phone",
   "publicConsent",
+  "welcomeEmailStatus",
+  "welcomeEmailSentAt",
 ];
 
 const jsonResponse_ = (data) => {
@@ -221,6 +223,48 @@ const cellText_ = (value) => {
   return /^[=+@-]/.test(text) ? "'" + text : text;
 };
 
+const welcomeEmail_ = (name, email) => {
+  const safeName = String(name).trim();
+  const subject = "Welcome to Soudagar Welfare Trust";
+  const body = [
+    `Hello ${safeName},`,
+    "",
+    "Thank you for joining Soudagar Welfare Trust.",
+    "We have received your membership application and will review it shortly.",
+    "",
+    "If you did not submit this application, please contact the trust.",
+    "",
+    "With regards,",
+    "Soudagar Welfare Trust",
+  ].join("\n");
+  MailApp.sendEmail({
+    to: email,
+    subject: subject,
+    body: body,
+    name: "Soudagar Welfare Trust",
+    replyTo:
+      PropertiesService.getScriptProperties().getProperty("WELCOME_REPLY_TO") ||
+      "soudagarwelfaretrust@gmail.com",
+  });
+};
+
+const sendWelcomeEmail_ = (sheet, columns, name, email, rowNumber) => {
+  try {
+    welcomeEmail_(name, email);
+    if (columns.welcomeemailstatus !== undefined) {
+      sheet
+        .getRange(rowNumber, columns.welcomeemailstatus + 1, 1, 2)
+        .setValues([["sent", new Date().toISOString()]]);
+    }
+  } catch {
+    if (columns.welcomeemailstatus !== undefined) {
+      sheet
+        .getRange(rowNumber, columns.welcomeemailstatus + 1, 1, 2)
+        .setValues([["failed", ""]]);
+    }
+  }
+};
+
 function doPost(e) {
   let data;
   try {
@@ -264,12 +308,16 @@ function doPost(e) {
       email: cellText_(email),
       phone: cellText_(data.phone),
       publicconsent: data.publicConsent,
+      welcomeemailstatus: "pending",
+      welcomeemailsentat: "",
     };
     const row = new Array(sheet.getLastColumn()).fill("");
     Object.keys(record).forEach((key) => {
       row[columns[key]] = record[key];
     });
     sheet.appendRow(row);
+    SpreadsheetApp.flush();
+    sendWelcomeEmail_(sheet, columns, data.name, email, sheet.getLastRow());
     SpreadsheetApp.flush();
     return jsonResponse_({ success: true });
   } catch {

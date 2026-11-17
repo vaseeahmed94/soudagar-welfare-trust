@@ -72,6 +72,7 @@ export default defineConfig([
         SpreadsheetApp: "readonly",
         LockService: "readonly",
         Utilities: "readonly",
+        MailApp: "readonly",
       },
     },
     rules: {

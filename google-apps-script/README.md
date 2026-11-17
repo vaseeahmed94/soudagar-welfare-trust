@@ -7,7 +7,7 @@
 1. Create a private Google spreadsheet, or use your existing membership spreadsheet. Keep the spreadsheet private: the script returns only the approved public directory.
 2. Open **Extensions → Apps Script** from the spreadsheet, or open your existing Apps Script project associated with `VITE_GOOGLE_SCRIPT_URL`.
 3. Save a copy of your existing script before replacing its membership handlers. Paste `Code.gs` into the Apps Script editor. Avoid duplicate `doGet` or `doPost` functions; merge unrelated existing functionality if needed.
-4. Open the script through your spreadsheet’s **Extensions → Apps Script**, select `setupMembersSheet`, and click **Run**. Authorize access when prompted. The script detects the attached spreadsheet ID and saves it automatically in Script Properties for web requests. No ID needs to be copied manually. Optionally set `MEMBER_SHEET_NAME` in Script Properties to an existing tab name; the default is `Members`.
+4. Open the script through your spreadsheet’s **Extensions → Apps Script**, select `setupMembersSheet`, and click **Run**. Authorize access when prompted, including permission to send email. The script detects the attached spreadsheet ID and saves it automatically in Script Properties for web requests. No ID needs to be copied manually. Optionally set `MEMBER_SHEET_NAME` in Script Properties to an existing tab name; the default is `Members`. Set `WELCOME_REPLY_TO` to the trust’s monitored reply address if you want replies routed somewhere specific; otherwise the configured trust address is used.
 5. The script automatically creates the member tab and any missing columns on every directory read and valid registration. Manual header creation is not required. The one-time editor run above saves the spreadsheet connection; later requests automatically maintain the tab and columns. If you use an existing tab, row 1 must contain its headers. Existing `Full name`, `Email address`, and `Phone number` headers are recognised. If your headers differ, rename them or adjust `canonicalHeader_` first. Blank consent stays private.
 6. Choose **Deploy → New deployment → Web app**, or update the existing web app deployment to a **New version**. Execute as **Me** and allow access to **Anyone** so public site visitors can submit and read the directory. Workspace policies may limit this option.
 7. Copy the deployed `/exec` URL to local `.env` and the GitHub Actions repository secret `VITE_GOOGLE_SCRIPT_URL`. Restart Vite locally and rerun the Pages workflow after changes. Updating the existing deployment can retain its URL.
@@ -20,14 +20,16 @@ Create or select your Google spreadsheet and run `setupMembersSheet` once from i
 
 ## Sheet columns
 
-| Column          | Purpose                                           |
-| --------------- | ------------------------------------------------- |
-| `id`            | Generated member identifier                       |
-| `createdAt`     | Registration timestamp                            |
-| `name`          | Full name                                         |
-| `email`         | Private contact email                             |
-| `phone`         | Private contact number                            |
-| `publicConsent` | `TRUE` for public display; `FALSE` for count only |
+| Column               | Purpose                                           |
+| -------------------- | ------------------------------------------------- |
+| `id`                 | Generated member identifier                       |
+| `createdAt`          | Registration timestamp                            |
+| `name`               | Full name                                         |
+| `email`              | Private contact email                             |
+| `phone`              | Private contact number                            |
+| `publicConsent`      | `TRUE` for public display; `FALSE` for count only |
+| `welcomeEmailStatus` | `sent`, `failed`, or `pending` delivery state     |
+| `welcomeEmailSentAt` | Timestamp recorded after a welcome email is sent  |
 
 The site always shows the first letter of the member’s name inside a circular avatar, with their full name underneath. Photos are not uploaded, collected, returned, or displayed. Any existing `photoUrl` sheet column is left untouched and ignored.
 
@@ -47,6 +49,8 @@ POST JSON with `Content-Type: text/plain;charset=UTF-8`:
 ```
 
 A saved application returns `{"success":true}`. Validation, duplicate email, and service errors return `{"success":false,"message":"..."}`. Duplicate registrations do not overwrite existing consent. Changes to existing membership details or consent are handled by the trust in the sheet after verifying the member's request.
+
+Each first-time registration sends one welcome email to the submitted address after the row is saved. Duplicate email submissions are rejected before sending another message. If Google’s email service is unavailable or its daily sending quota is reached, the membership remains saved and `welcomeEmailStatus` is recorded as `failed`; the trust can contact that member manually. Google Apps Script’s Mail service and daily quotas apply.
 
 GET `/exec?action=members` returns:
 
@@ -70,6 +74,7 @@ Here the second member is counted but no identifying information about that memb
 - Register a different test person with **Yes**: the total increases and their name and initial appear. Confirm that no profile image is requested or displayed.
 - Confirm that choosing neither Yes nor No blocks submission.
 - Confirm existing blank-consent rows are counted without exposing their names.
+- Submit one new address and confirm the welcome email arrives; submit the same address again and confirm no second welcome email is sent.
 - Remove the test rows afterwards. Automated project checks use mocks and do not submit to your live sheet.
 
-References: [Google web app deployment](https://developers.google.com/apps-script/guides/web), [Script properties](https://developers.google.com/apps-script/guides/properties).
+References: [Google web app deployment](https://developers.google.com/apps-script/guides/web), [Script properties](https://developers.google.com/apps-script/guides/properties), [Mail service](https://developers.google.com/apps-script/reference/mail/mail-app), and [Apps Script quotas](https://developers.google.com/apps-script/guides/services/quotas).

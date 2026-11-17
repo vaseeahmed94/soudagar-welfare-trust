@@ -14,6 +14,8 @@ const headers = [
   "email",
   "phone",
   "publicConsent",
+  "welcomeEmailStatus",
+  "welcomeEmailSentAt",
   "photoUrl",
 ];
 
@@ -26,6 +28,7 @@ const backend = (initialRows = [headers], options = {}) => {
     columnExpansions: 0,
     readRanges: [],
     fullDataReads: 0,
+    welcomeEmails: [],
   };
   let maximumWidth = Math.max(1, ...rows.map((row) => row.length));
   const sheet = {
@@ -115,6 +118,9 @@ const backend = (initialRows = [headers], options = {}) => {
       }),
     },
     Utilities: { getUuid: () => `member-${rows.length}` },
+    MailApp: {
+      sendEmail: (message) => operations.welcomeEmails.push(message),
+    },
   });
   vm.runInContext(code, context);
   const post = (data) =>
@@ -145,6 +151,8 @@ const applicant = {
 test("No stores consent and increases the count without exposing any profile or contact details", () => {
   const api = backend();
   assert.equal(api.post(applicant).success, true);
+  assert.equal(api.operations.welcomeEmails.length, 1);
+  assert.equal(api.operations.welcomeEmails[0].to, applicant.email);
   assert.equal(api.rows[1][5], false);
   assert.deepEqual(api.get(), { success: true, totalCount: 1, members: [] });
   assert.ok(!JSON.stringify(api.get()).includes(applicant.name));
@@ -231,6 +239,7 @@ test("A duplicate request cannot change a private member to public", () => {
   const api = backend();
   assert.equal(api.post(applicant).success, true);
   assert.equal(api.post({ ...applicant, publicConsent: true }).success, false);
+  assert.equal(api.operations.welcomeEmails.length, 1);
   assert.equal(api.rows.length, 2);
   assert.equal(api.get().totalCount, 1);
   assert.deepEqual(api.get().members, []);
@@ -268,6 +277,8 @@ test("A directory read automatically creates a missing tab and all required colu
     "email",
     "phone",
     "publicConsent",
+    "welcomeEmailStatus",
+    "welcomeEmailSentAt",
   ]);
   assert.equal(api.operations.sheetCreations, 1);
   assert.equal(api.operations.columnExpansions, 1);
