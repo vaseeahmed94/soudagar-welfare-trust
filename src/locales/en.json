@@ -44,7 +44,7 @@
   "common.joinCommunity": "Join Our Community",
   "common.learnMore": "Learn More",
   "common.retry": "Try again",
-  "contact.location": "Bidar, Karnataka",
+  "contact.location": "Dubalgundi, Karnataka",
   "footer.contactHeading": "Get in Touch",
   "footer.copyright": "© {year} Soudagar Welfare Trust (SWT). All rights reserved.",
   "footer.emailLabel": "Email SWT",
@@ -80,6 +80,10 @@
   "members.label": "Members",
   "members.loading": "Fetching our members…",
   "members.privacy": "Only members who consent are shown. Everyone is included in the count.",
+  "members.nextPage": "Next",
+  "members.paginationLabel": "Member directory pages",
+  "members.page": "Page {current} of {total}",
+  "members.previousPage": "Previous",
   "members.publicProfilesNote": "Public member profiles will appear here when members choose to share them.",
   "members.unavailable": "Member details are temporarily unavailable.",
   "members.viewAll": "View All Members",
@@ -157,5 +161,10 @@
   "video.heading": "Together, making a difference",
   "video.label": "Soudagar Welfare Trust community video",
   "video.note": "Press play when you are ready.",
-  "video.unsupported": "Your browser does not support embedded video."
+  "video.unsupported": "Your browser does not support embedded video.",
+  "welcome.description": "See the spirit of Soudagar Welfare Trust in action.",
+  "welcome.eyebrow": "Welcome to our community",
+  "welcome.heading": "Together for a better tomorrow",
+  "welcome.note": "The video starts muted. You can turn the sound on using the video controls.",
+  "welcome.videoLabel": "Welcome video for Soudagar Welfare Trust"
 }

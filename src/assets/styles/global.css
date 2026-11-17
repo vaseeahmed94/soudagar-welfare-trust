@@ -1038,6 +1038,32 @@
   font-size: 29px;
   margin: 11px 0;
 }
+.welcome-modal {
+  width: min(760px, calc(100vw - 2 * var(--dialog-margin)));
+}
+.welcome-dialog-content > p:not(.form-note) {
+  margin: 0 0 16px;
+  color: var(--color-text-muted);
+}
+.welcome-video-frame {
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: #092f22;
+}
+.welcome-video-frame video {
+  display: block;
+  width: min(100%, 360px);
+  max-height: min(52dvh, 520px);
+  aspect-ratio: 9 / 16;
+  object-fit: contain;
+  background: #092f22;
+}
+.welcome-dialog-content .form-note {
+  margin: 12px 0 0;
+}
 .modal > p {
   font-size: 14px;
   color: var(--color-text-muted);
@@ -2124,6 +2150,49 @@ button:disabled {
 .member-directory .member-profile {
   max-width: none;
 }
+.member-directory {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 250px;
+  align-items: start;
+}
+.member-directory .member-profile {
+  width: 100%;
+}
+.member-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -4px 0 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.member-page-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.member-page-button:hover:not(:disabled) {
+  border-color: var(--color-positive);
+  color: var(--color-positive);
+}
+.member-page-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.member-page-indicator {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
 
 .member-loading {
   margin: 12px 0;
@@ -2169,6 +2238,10 @@ button:disabled {
   margin-top: 8px;
 }
 @media (max-width: 540px) {
+  .member-directory {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px 10px;
+  }
   .member-avatar {
     font-size: 28px;
   }

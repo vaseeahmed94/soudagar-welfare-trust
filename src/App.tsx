@@ -1,5 +1,5 @@
 import { useLocale } from "./hooks/useLocale";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMemberDirectory } from "./hooks/useMemberDirectory";
 import type { ModalState } from "./types/modal.types";
 import BackToTop from "./components/common/BackToTop";
@@ -16,17 +16,31 @@ import MembersSection from "./components/sections/MembersSection";
 import GallerySection from "./components/sections/GallerySection";
 import TestimonialsSection from "./components/sections/TestimonialsSection";
 import JoinCommunitySection from "./components/sections/JoinCommunitySection";
+import { WELCOME_MODAL_STORAGE_KEY } from "./constants/storage";
 
 const App = () => {
   const { t } = useLocale();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [activeModal, setActiveModal] = useState<ModalState>(null);
+  const welcomeShownRef = useRef(false);
   const { memberDirectory, memberLoadStatus, refreshMembers } =
     useMemberDirectory();
 
   useEffect(() => {
     if (memberLoadStatus !== "loading") setIsInitialLoading(false);
   }, [memberLoadStatus]);
+
+  useEffect(() => {
+    if (isInitialLoading || welcomeShownRef.current) return;
+    welcomeShownRef.current = true;
+    try {
+      if (sessionStorage.getItem(WELCOME_MODAL_STORAGE_KEY)) return;
+      sessionStorage.setItem(WELCOME_MODAL_STORAGE_KEY, "true");
+    } catch {
+      // Still show the welcome dialog for this session when storage is blocked.
+    }
+    setActiveModal({ kind: "welcome" });
+  }, [isInitialLoading]);
 
   const handleJoin = () => setActiveModal({ kind: "join" });
   if (isInitialLoading) {

@@ -14,6 +14,7 @@ export interface TranslationParameters {
   "footer.copyright": { year: number };
   "members.count.one": { count: string };
   "members.count.other": { count: string };
+  "members.page": { current: number; total: number };
 }
 
 export type Translate = <Key extends TranslationKey>(

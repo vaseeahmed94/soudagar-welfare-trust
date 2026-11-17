@@ -8,6 +8,7 @@ import MembersDirectory from "./MembersDirectory";
 import GalleryLightbox from "./GalleryLightbox";
 import PrivacyPolicy from "./PrivacyPolicy";
 import TermsAndConditions from "./TermsAndConditions";
+import WelcomeDialog from "./WelcomeDialog";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { submitMembershipApplication } from "../../services/membershipService";
@@ -93,7 +94,7 @@ const AppDialog = ({
   return (
     <dialog
       ref={dialogRef}
-      className={`modal ${activeModal?.kind === "gallery" ? "gallery-modal" : activeModal?.kind === "join" ? "join-modal" : ""}`}
+      className={`modal ${activeModal?.kind === "gallery" ? "gallery-modal" : activeModal?.kind === "join" ? "join-modal" : activeModal?.kind === "welcome" ? "welcome-modal" : ""}`}
       onCancel={(event) => {
         if (isSubmissionPendingRef.current) event.preventDefault();
         else onModalChange(null);
@@ -130,6 +131,7 @@ const AppDialog = ({
           onClose={() => onModalChange(null)}
         />
       )}
+      {activeModal?.kind === "welcome" && <WelcomeDialog />}
       {activeModal?.kind === "activity" && (
         <ActivityDetails index={activeModal.index} onJoin={onJoin} />
       )}
