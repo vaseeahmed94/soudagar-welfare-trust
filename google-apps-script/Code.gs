@@ -527,12 +527,14 @@ const scriptDate_ = () => {
   );
 };
 
-const displayTimestamp_ = () =>
-  Utilities.formatDate(
+const displayTimestamp_ = () => {
+  if (!Utilities.formatDate) return new Date().toISOString();
+  return Utilities.formatDate(
     new Date(),
     Session.getScriptTimeZone(),
     "dd MMM yyyy, hh:mm a",
   );
+};
 
 const reminderMonth_ = (dateText) => dateText.slice(0, 7);
 
