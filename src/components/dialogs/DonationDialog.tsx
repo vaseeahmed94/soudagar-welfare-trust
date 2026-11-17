@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { ArrowRight, Copy, HeartHandshake } from "lucide-react";
 import { useLocale } from "../../hooks/useLocale";
 import { submitDonationApplication } from "../../services/donationService";
-import donationQr from "../../assets/images/donation-qr.png";
+import donationQr from "../../assets/images/swt-donation-qr.jpeg";
 
 const DonationDialog = () => {
   const { t } = useLocale();

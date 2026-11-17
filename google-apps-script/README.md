@@ -39,6 +39,10 @@ The total includes all membership rows with a name. Only rows with explicit `TRU
 
 ## API contract
 
+The member contribution portal uses email verification rather than exposing private sheet data. The first request creates `AccessCodes`, `AccessSessions`, `Contributions`, and `Activities` tabs automatically. Add contribution rows with the member's email in `memberEmail`; the portal only returns rows matching the verified email.
+
+Supported portal requests are `requestAccessCode` (`email`), `verifyAccessCode` (`email`, `code`), and `memberDetails` (`token`). Codes expire after 5 minutes and sessions expire after 30 minutes. Store only operational data in the sheet and keep the spreadsheet private.
+
 POST JSON with `Content-Type: text/plain;charset=UTF-8`:
 
 ```json

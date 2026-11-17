@@ -10,6 +10,7 @@ import PrivacyPolicy from "./PrivacyPolicy";
 import TermsAndConditions from "./TermsAndConditions";
 import WelcomeDialog from "./WelcomeDialog";
 import DonationDialog from "./DonationDialog";
+import ContributionAccessDialog from "./ContributionAccessDialog";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { submitMembershipApplication } from "../../services/membershipService";
@@ -134,6 +135,7 @@ const AppDialog = ({
       )}
       {activeModal?.kind === "welcome" && <WelcomeDialog />}
       {activeModal?.kind === "donation" && <DonationDialog />}
+      {activeModal?.kind === "contributions" && <ContributionAccessDialog />}
       {activeModal?.kind === "activity" && (
         <ActivityDetails index={activeModal.index} onJoin={onJoin} />
       )}

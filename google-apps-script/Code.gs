@@ -34,6 +34,24 @@ const DONATION_COLUMNS = [
   "phone",
   "amount",
 ];
+const ACCESS_COLUMNS = ["email", "codeHash", "expiresAt", "attempts", "used"];
+const SESSION_COLUMNS = ["tokenHash", "email", "expiresAt", "used"];
+const CONTRIBUTION_COLUMNS = [
+  "id",
+  "memberEmail",
+  "month",
+  "amount",
+  "status",
+  "activity",
+  "createdAt",
+];
+const ACTIVITY_COLUMNS = [
+  "month",
+  "title",
+  "description",
+  "amountSpent",
+  "summaryFileUrl",
+];
 
 const jsonResponse_ = (data) => {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(
@@ -220,6 +238,220 @@ const ensureDonationSheet_ = () => {
   };
 };
 
+const ensureSimpleSheet_ = (name, requiredColumns) => {
+  const spreadsheet = spreadsheet_();
+  const sheet =
+    spreadsheet.getSheetByName(name) || spreadsheet.insertSheet(name);
+  const width = sheet.getLastColumn();
+  const headers = width ? sheet.getRange(1, 1, 1, width).getValues()[0] : [];
+  const existing = columns_(headers);
+  const missing = requiredColumns.filter(
+    (column) => existing[canonicalHeader_(column)] === undefined,
+  );
+  if (missing.length) {
+    const requiredWidth = width + missing.length;
+    if (requiredWidth > sheet.getMaxColumns())
+      sheet.insertColumnsAfter(
+        sheet.getMaxColumns(),
+        requiredWidth - sheet.getMaxColumns(),
+      );
+    sheet.getRange(1, width + 1, 1, missing.length).setValues([missing]);
+  }
+  sheet.setFrozenRows(1);
+  return {
+    sheet,
+    columns: columns_(
+      sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0],
+    ),
+  };
+};
+
+const valueHash_ = (value) => {
+  const bytes = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    String(value),
+    Utilities.Charset.UTF_8,
+  );
+  return bytes
+    .map((byte) => (byte < 0 ? byte + 256 : byte).toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const accessEmail_ = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const validAccessEmail_ = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+const requestAccessCode_ = (data) => {
+  const email = accessEmail_(data.email);
+  if (!validAccessEmail_(email))
+    return jsonResponse_({
+      success: false,
+      message: "Please provide a valid email address.",
+    });
+  const memberSheet = ensureMemberSheet_();
+  const memberRows = memberSheet.sheet.getDataRange().getValues();
+  const exists = memberRows
+    .slice(1)
+    .some((row) => accessEmail_(row[memberSheet.columns.email]) === email);
+  if (!exists)
+    return jsonResponse_({
+      success: false,
+      message: "No member record was found for this email address.",
+    });
+  const prepared = ensureSimpleSheet_("AccessCodes", ACCESS_COLUMNS);
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  const row = new Array(prepared.sheet.getLastColumn()).fill("");
+  row[prepared.columns.email] = email;
+  row[prepared.columns.codehash] = valueHash_(code);
+  row[prepared.columns.expiresat] = expiresAt;
+  row[prepared.columns.attempts] = 0;
+  row[prepared.columns.used] = false;
+  prepared.sheet.appendRow(row);
+  MailApp.sendEmail({
+    to: email,
+    subject: "Your SWT member portal verification code",
+    body: `Your Soudagar Welfare Trust verification code is ${code}. It expires in 5 minutes.`,
+    htmlBody: accessCodeEmailHtml_(code),
+  });
+  return jsonResponse_({ success: true });
+};
+
+const accessCodeEmailHtml_ = (code) => {
+  const logoUrl =
+    "https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/favicon.svg";
+  return `<div style="margin:0;background:#fbfaf4;padding:32px 16px;font-family:Arial,sans-serif;color:#17382b;"><div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #dce7dc;border-radius:16px;overflow:hidden;"><div style="background:#075c38;padding:24px;text-align:center;"><img src="${logoUrl}" alt="Soudagar Welfare Trust" width="64" height="64" style="display:inline-block;border-radius:14px;" /></div><div style="padding:30px 28px;"><p style="margin:0 0 14px;color:#b38a2a;font-size:12px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;">Member portal</p><h1 style="margin:0 0 16px;color:#075c38;font-size:26px;line-height:1.2;">Verify your email</h1><p style="margin:0 0 22px;font-size:16px;line-height:1.6;">Use this one-time code to view your private contribution details.</p><div style="margin:22px 0;padding:20px;text-align:center;border:1px solid #c9a64d;border-radius:12px;background:#063d2a;color:#e7c86b;font-size:34px;font-weight:bold;letter-spacing:8px;user-select:all;-webkit-user-select:all;">${htmlEscape_(code)}</div><p style="margin:0 0 8px;text-align:center;color:#075c38;font-size:12px;font-weight:bold;">Tap and hold the code to copy it</p><p style="margin:0;color:#5c7165;font-size:14px;line-height:1.6;">This code expires in 5 minutes. If you did not request access, you can safely ignore this email.</p><div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;"><p style="margin:0;font-size:15px;line-height:1.6;">With warm regards,</p><p style="margin:4px 0 0;color:#075c38;font-size:16px;font-weight:bold;">Soudagar Welfare Trust</p><p style="margin:4px 0 0;color:#b38a2a;font-size:12px;letter-spacing:1px;">HUMANITY · SERVICE · UNITY</p></div></div></div></div>`;
+};
+
+const verifyAccessCode_ = (data) => {
+  const email = accessEmail_(data.email);
+  const code = String(data.code || "").trim();
+  if (!validAccessEmail_(email) || !/^\d{6}$/.test(code))
+    return jsonResponse_({
+      success: false,
+      message: "Enter the email and six-digit code.",
+    });
+  const prepared = ensureSimpleSheet_("AccessCodes", ACCESS_COLUMNS);
+  const rows = prepared.sheet.getDataRange().getValues();
+  for (let index = rows.length - 1; index > 0; index -= 1) {
+    const row = rows[index];
+    if (
+      accessEmail_(row[prepared.columns.email]) !== email ||
+      String(row[prepared.columns.used]).toLowerCase() === "true"
+    )
+      continue;
+    const attempts = Number(row[prepared.columns.attempts] || 0);
+    if (
+      attempts >= 5 ||
+      new Date(row[prepared.columns.expiresat]).getTime() < Date.now()
+    )
+      break;
+    prepared.sheet
+      .getRange(index + 1, prepared.columns.attempts + 1)
+      .setValue(attempts + 1);
+    if (valueHash_(code) !== String(row[prepared.columns.codehash]))
+      return jsonResponse_({
+        success: false,
+        message: "That code is not valid.",
+      });
+    prepared.sheet
+      .getRange(index + 1, prepared.columns.used + 1)
+      .setValue(true);
+    const sessions = ensureSimpleSheet_("AccessSessions", SESSION_COLUMNS);
+    const token = Utilities.getUuid() + Utilities.getUuid();
+    const sessionRow = new Array(sessions.sheet.getLastColumn()).fill("");
+    sessionRow[sessions.columns.tokenhash] = valueHash_(token);
+    sessionRow[sessions.columns.email] = email;
+    sessionRow[sessions.columns.expiresat] = new Date(
+      Date.now() + 30 * 60 * 1000,
+    ).toISOString();
+    sessionRow[sessions.columns.used] = false;
+    sessions.sheet.appendRow(sessionRow);
+    return jsonResponse_({ success: true, token });
+  }
+  return jsonResponse_({
+    success: false,
+    message: "That code has expired or reached its attempt limit.",
+  });
+};
+
+const memberDetails_ = (data) => {
+  const token = String(data.token || "").trim();
+  if (!token)
+    return jsonResponse_({
+      success: false,
+      message: "Verification is required.",
+    });
+  const sessions = ensureSimpleSheet_("AccessSessions", SESSION_COLUMNS);
+  const rows = sessions.sheet.getDataRange().getValues();
+  let email = "";
+  for (let index = rows.length - 1; index > 0; index -= 1) {
+    const row = rows[index];
+    if (
+      String(row[sessions.columns.tokenhash]) === valueHash_(token) &&
+      String(row[sessions.columns.used]).toLowerCase() !== "true" &&
+      new Date(row[sessions.columns.expiresat]).getTime() > Date.now()
+    ) {
+      email = accessEmail_(row[sessions.columns.email]);
+      break;
+    }
+  }
+  if (!email)
+    return jsonResponse_({
+      success: false,
+      message: "Your verification session has expired.",
+    });
+  const members = ensureMemberSheet_();
+  const memberRows = members.sheet.getDataRange().getValues();
+  const memberRow = memberRows
+    .slice(1)
+    .find((row) => accessEmail_(row[members.columns.email]) === email);
+  if (!memberRow)
+    return jsonResponse_({
+      success: false,
+      message: "Member record not found.",
+    });
+  const contributions = ensureSimpleSheet_(
+    "Contributions",
+    CONTRIBUTION_COLUMNS,
+  );
+  const contributionRows = contributions.sheet
+    .getDataRange()
+    .getValues()
+    .slice(1)
+    .filter(
+      (row) => accessEmail_(row[contributions.columns.memberemail]) === email,
+    )
+    .map((row) => ({
+      month: row[contributions.columns.month],
+      amount: row[contributions.columns.amount],
+      status: row[contributions.columns.status],
+      activity: row[contributions.columns.activity],
+      createdAt: row[contributions.columns.createdat],
+    }));
+  const activities = ensureSimpleSheet_("Activities", ACTIVITY_COLUMNS);
+  const activityRows = activities.sheet
+    .getDataRange()
+    .getValues()
+    .slice(1)
+    .map((row) => ({
+      month: row[activities.columns.month],
+      title: row[activities.columns.title],
+      description: row[activities.columns.description],
+      amountSpent: row[activities.columns.amountspent],
+      summaryFileUrl: row[activities.columns.summaryfileurl],
+    }));
+  return jsonResponse_({
+    success: true,
+    member: { name: memberRow[members.columns.name], email },
+    contributions: contributionRows,
+    activities: activityRows,
+  });
+};
+
 const validateDonation_ = (data) => {
   const validation = validateApplication_({ ...data, publicConsent: false });
   if (validation) return validation;
@@ -344,9 +576,9 @@ const monthlyReminderHtml_ = (name) => {
                 <p style="margin:5px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
               </td>
               <td width="42%" style="padding:18px 14px;vertical-align:middle;text-align:center;border-left:1px solid #c9a64d80;">
-                <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/donation-qr.png" alt="QR code for SWT donations" width="130" height="130" style="display:block;margin:0 auto 12px;background:#ffffff;border-radius:8px;" />
+                <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/swt-donation-qr.jpeg" alt="QR code for SWT donations" width="170" height="170" style="display:block;margin:0 auto 12px;background:#ffffff;border-radius:10px;" />
                 <p style="margin:0;color:#cfe4d2;font-size:12px;">UPI ID</p>
-                <p style="margin:3px 0 0;color:#e7c86b;font-size:14px;font-weight:bold;word-break:break-word;">trustname@upi</p>
+                <p style="margin:3px 0 0;color:#e7c86b;font-size:14px;font-weight:bold;word-break:break-word;">7676979749@axl</p>
               </td>
             </tr>
           </table>
@@ -380,7 +612,9 @@ const welcomeEmailHtml_ = (name) => {
             <p style="margin:0 0 6px;color:#e7c86b;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">SWT Donation Details</p>
             <p style="margin:0;color:#e7c86b;font-size:30px;font-weight:bold;">₹30 / month</p>
             <p style="margin:4px 0 0;color:#e3f0e4;font-size:14px;">Just ₹1 a day can make a difference.</p>
-            <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/donation-qr.png" alt="QR code for SWT donations" width="150" height="150" style="display:block;margin:14px auto 0;background:#ffffff;border-radius:8px;" />
+            <img src="https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/swt-donation-qr.jpeg" alt="QR code for SWT donations" width="170" height="170" style="display:block;margin:14px auto 10px;background:#ffffff;border-radius:10px;" />
+            <p style="margin:0;color:#cfe4d2;font-size:12px;">UPI ID</p>
+            <p style="margin:3px 0 0;color:#e7c86b;font-size:14px;font-weight:bold;word-break:break-word;">7676979749@axl</p>
           </div>
           <p style="margin:0;font-size:15px;line-height:1.6;color:#5c7165;">If you did not submit this application, please contact the trust.</p>
           <div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;">
@@ -681,6 +915,10 @@ function doPost(e) {
     return jsonResponse_({ success: false, message: "Invalid request." });
   }
   if (data && data.type === "donation") return saveDonation_(data);
+  if (data && data.type === "requestAccessCode")
+    return requestAccessCode_(data);
+  if (data && data.type === "verifyAccessCode") return verifyAccessCode_(data);
+  if (data && data.type === "memberDetails") return memberDetails_(data);
   const validation = validateApplication_(data);
   if (validation) return jsonResponse_({ success: false, message: validation });
   const lock = LockService.getScriptLock();

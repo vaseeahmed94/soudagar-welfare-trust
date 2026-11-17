@@ -5,6 +5,7 @@ export type ModalState =
   | { kind: "activity"; index: number }
   | { kind: "gallery"; index: number }
   | { kind: "members" }
+  | { kind: "contributions" }
   | { kind: "privacy" }
   | { kind: "terms" }
   | null;

@@ -68,6 +68,12 @@ const MembersSection = ({
       >
         {t("members.viewAll")} <ArrowRight size={15} />
       </button>
+      <button
+        className="button button-outline button-small"
+        onClick={() => onModalChange({ kind: "contributions" })}
+      >
+        View my contributions <ArrowRight size={15} />
+      </button>
     </section>
   );
 };

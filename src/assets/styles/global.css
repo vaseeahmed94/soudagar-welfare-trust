@@ -592,22 +592,79 @@
 }
 .donation-payment-details {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
   margin-top: 0;
-  text-align: left;
+  text-align: center;
 }
 .donation-payment-details img {
-  width: 74px;
-  height: 74px;
-  padding: 4px;
-  border-radius: 8px;
+  width: clamp(118px, 12vw, 170px);
+  height: clamp(118px, 12vw, 170px);
+  padding: 6px;
+  border-radius: 12px;
   background: #fff;
+}
+.donation-qr-button {
+  padding: 0;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  cursor: zoom-in;
+}
+.donation-qr-button:focus-visible {
+  outline: 3px solid #e7c86b;
+  outline-offset: 4px;
+}
+.donation-qr-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #001f1bdd;
+  backdrop-filter: blur(5px);
+}
+.donation-qr-lightbox img {
+  width: min(82vw, 520px);
+  height: min(82vw, 520px);
+  padding: 12px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 20px 70px #0007;
+}
+.donation-qr-close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff;
+  color: #17382b;
 }
 .donation-payment-details span,
 .donation-payment-details strong {
   display: block;
+}
+.donation-copy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 10px;
+  border: 1px solid #e1bd5c99;
+  border-radius: 999px;
+  background: transparent;
+  color: #f4d77c;
+  font-size: 12px;
+}
+.donation-copy-button:hover {
+  background: #ffffff12;
 }
 .donation-open-button {
   margin-top: 18px;
@@ -647,9 +704,10 @@
 }
 .donation-dialog-payment {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 12px;
   margin-top: 22px;
   padding: 18px;
   border-radius: 14px;
@@ -665,6 +723,7 @@
 .donation-dialog-payment span,
 .donation-dialog-payment strong {
   display: block;
+  text-align: center;
 }
 .donation-dialog-payment span {
   color: var(--color-text-muted);
@@ -875,6 +934,12 @@
   min-height: 35px;
   padding: 8px 23px;
   font-size: 12px;
+}
+.members > .button {
+  min-width: min(100%, 220px);
+}
+.members > .button + .button {
+  margin-left: 10px;
 }
 
 .gallery-grid button {
@@ -1238,6 +1303,38 @@
   outline: 2px solid var(--color-focus);
   outline-offset: 1px;
 }
+.contribution-access {
+  display: grid;
+  gap: 14px;
+}
+.contribution-access > p {
+  margin: 0 0 8px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+.contribution-access > .button {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 4px;
+}
+.contribution-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+.contribution-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-input);
+}
+.contribution-row small {
+  grid-column: 1 / -1;
+  color: var(--color-text-muted);
+}
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1579,6 +1676,10 @@
   .donation-details-action {
     width: min(100%, 390px);
     margin-inline: auto;
+  }
+  .donation-payment-details img {
+    width: clamp(132px, 32vw, 170px);
+    height: clamp(132px, 32vw, 170px);
   }
   .topbar-inner {
     min-height: 34px;
@@ -2598,6 +2699,30 @@ button:disabled {
   }
 }
 @media (max-width: 540px) {
+  .modal {
+    width: calc(100vw - 20px);
+    padding: 26px 18px 22px;
+    border-radius: 16px;
+  }
+  .modal h2 {
+    font-size: clamp(24px, 7vw, 32px);
+    line-height: 1.15;
+    padding-right: 24px;
+  }
+  .contribution-access > .button {
+    width: 100%;
+    justify-content: center;
+  }
+  .members > .button {
+    display: flex;
+    width: 100%;
+    max-width: 360px;
+    margin: 10px auto 0;
+    justify-content: center;
+  }
+  .members > .button + .button {
+    margin: 10px auto 0;
+  }
   .topbar-inner .contact-links > a {
     display: none;
   }
