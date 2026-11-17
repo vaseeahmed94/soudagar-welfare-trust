@@ -73,6 +73,9 @@ export default defineConfig([
         LockService: "readonly",
         Utilities: "readonly",
         MailApp: "readonly",
+        Logger: "readonly",
+        ScriptApp: "readonly",
+        Session: "readonly",
       },
     },
     rules: {
@@ -80,14 +83,17 @@ export default defineConfig([
         "error",
         {
           selector:
-            "FunctionDeclaration:not([id.name='doGet']):not([id.name='doPost']):not([id.name='setupMembersSheet'])",
+            "FunctionDeclaration:not([id.name='doGet']):not([id.name='doPost']):not([id.name='setupMembersSheet']):not([id.name='authorizeEmail']):not([id.name='testWelcomeEmail']):not([id.name='testMonthlyReminderEmail']):not([id.name='processMonthlyReminderQueue']):not([id.name='setupMonthlyReminderTrigger'])",
           message:
             "Use arrow functions for internal helpers; keep Apps Script entry points as declarations.",
         },
       ],
       "no-unused-vars": [
         "error",
-        { varsIgnorePattern: "^(doGet|doPost|setupMembersSheet)$" },
+        {
+          varsIgnorePattern:
+            "^(doGet|doPost|setupMembersSheet|authorizeEmail|testWelcomeEmail|testMonthlyReminderEmail|processMonthlyReminderQueue|setupMonthlyReminderTrigger)$",
+        },
       ],
       eqeqeq: "error",
       "no-var": "error",

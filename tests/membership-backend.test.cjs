@@ -14,6 +14,7 @@ const headers = [
   "email",
   "phone",
   "publicConsent",
+  "monthlyReminderEnabled",
   "welcomeEmailStatus",
   "welcomeEmailSentAt",
   "photoUrl",
@@ -277,6 +278,7 @@ test("A directory read automatically creates a missing tab and all required colu
     "email",
     "phone",
     "publicConsent",
+    "monthlyReminderEnabled",
     "welcomeEmailStatus",
     "welcomeEmailSentAt",
   ]);

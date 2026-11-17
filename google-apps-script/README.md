@@ -8,6 +8,7 @@
 2. Open **Extensions → Apps Script** from the spreadsheet, or open your existing Apps Script project associated with `VITE_GOOGLE_SCRIPT_URL`.
 3. Save a copy of your existing script before replacing its membership handlers. Paste `Code.gs` into the Apps Script editor. Avoid duplicate `doGet` or `doPost` functions; merge unrelated existing functionality if needed.
 4. Open the script through your spreadsheet’s **Extensions → Apps Script**, select `setupMembersSheet`, and click **Run**. Authorize access when prompted, including permission to send email. The script detects the attached spreadsheet ID and saves it automatically in Script Properties for web requests. No ID needs to be copied manually. Optionally set `MEMBER_SHEET_NAME` in Script Properties to an existing tab name; the default is `Members`. Set `WELCOME_REPLY_TO` to the trust’s monitored reply address if you want replies routed somewhere specific; otherwise the configured trust address is used.
+   For safe email testing, set a `TEST_EMAIL` Script Property to your own address, then run `testWelcomeEmail` or `testMonthlyReminderEmail`. These test functions never send to member rows.
 5. The script automatically creates the member tab and any missing columns on every directory read and valid registration. Manual header creation is not required. The one-time editor run above saves the spreadsheet connection; later requests automatically maintain the tab and columns. If you use an existing tab, row 1 must contain its headers. Existing `Full name`, `Email address`, and `Phone number` headers are recognised. If your headers differ, rename them or adjust `canonicalHeader_` first. Blank consent stays private.
 6. Choose **Deploy → New deployment → Web app**, or update the existing web app deployment to a **New version**. Execute as **Me** and allow access to **Anyone** so public site visitors can submit and read the directory. Workspace policies may limit this option.
 7. Copy the deployed `/exec` URL to local `.env` and the GitHub Actions repository secret `VITE_GOOGLE_SCRIPT_URL`. Restart Vite locally and rerun the Pages workflow after changes. Updating the existing deployment can retain its URL.
@@ -20,16 +21,17 @@ Create or select your Google spreadsheet and run `setupMembersSheet` once from i
 
 ## Sheet columns
 
-| Column               | Purpose                                           |
-| -------------------- | ------------------------------------------------- |
-| `id`                 | Generated member identifier                       |
-| `createdAt`          | Registration timestamp                            |
-| `name`               | Full name                                         |
-| `email`              | Private contact email                             |
-| `phone`              | Private contact number                            |
-| `publicConsent`      | `TRUE` for public display; `FALSE` for count only |
-| `welcomeEmailStatus` | `sent`, `failed`, or `pending` delivery state     |
-| `welcomeEmailSentAt` | Timestamp recorded after a welcome email is sent  |
+| Column                   | Purpose                                                        |
+| ------------------------ | -------------------------------------------------------------- |
+| `id`                     | Generated member identifier                                    |
+| `createdAt`              | Registration timestamp                                         |
+| `name`                   | Full name                                                      |
+| `email`                  | Private contact email                                          |
+| `phone`                  | Private contact number                                         |
+| `publicConsent`          | `TRUE` for public display; `FALSE` for count only              |
+| `monthlyReminderEnabled` | Blank/`TRUE` receives monthly reminders; `FALSE` disables them |
+| `welcomeEmailStatus`     | `sent`, `failed`, or `pending` delivery state                  |
+| `welcomeEmailSentAt`     | Timestamp recorded after a welcome email is sent               |
 
 The site always shows the first letter of the member’s name inside a circular avatar, with their full name underneath. Photos are not uploaded, collected, returned, or displayed. Any existing `photoUrl` sheet column is left untouched and ignored.
 

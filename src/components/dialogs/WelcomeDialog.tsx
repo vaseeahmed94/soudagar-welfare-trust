@@ -48,7 +48,6 @@ const WelcomeDialog = () => {
           {t("video.unsupported")}
         </video>
       </div>
-      <p className="form-note">{t("welcome.note")}</p>
     </div>
   );
 };

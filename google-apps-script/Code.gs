@@ -11,9 +11,21 @@ const MEMBER_COLUMNS = [
   "email",
   "phone",
   "publicConsent",
+  "monthlyReminderEnabled",
   "welcomeEmailStatus",
   "welcomeEmailSentAt",
 ];
+const REMINDER_COLUMNS = [
+  "name",
+  "email",
+  "reminderMonth",
+  "sentAt",
+  "status",
+  "attempts",
+  "error",
+];
+const REMINDER_DAILY_SEND_LIMIT = 80;
+const REMINDER_RETRY_LIMIT = 3;
 
 const jsonResponse_ = (data) => {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(
@@ -109,6 +121,282 @@ function setupMembersSheet() {
   } finally {
     lock.releaseLock();
   }
+}
+
+/** Run once in the editor to authorize MailApp and verify the daily quota. */
+function authorizeEmail() {
+  const remainingQuota = MailApp.getRemainingDailyQuota();
+  Logger.log(
+    "Welcome email authorization complete. Remaining quota: " + remainingQuota,
+  );
+}
+
+const testEmailRecipient_ = () => {
+  const recipient = normalizedEmail_(
+    PropertiesService.getScriptProperties().getProperty("TEST_EMAIL"),
+  );
+  if (!recipient) {
+    throw new Error(
+      "Set TEST_EMAIL in Script Properties before running an email test.",
+    );
+  }
+  return recipient;
+};
+
+/** Sends a welcome-email preview only to the TEST_EMAIL script property. */
+function testWelcomeEmail() {
+  const recipient = testEmailRecipient_();
+  welcomeEmail_("Test Member", recipient);
+  Logger.log("Welcome email test sent to the configured TEST_EMAIL.");
+}
+
+/** Sends a monthly-reminder preview only to the TEST_EMAIL script property. */
+function testMonthlyReminderEmail() {
+  const recipient = testEmailRecipient_();
+  sendMonthlyReminder_("Test Member", recipient);
+  Logger.log("Monthly reminder test sent to the configured TEST_EMAIL.");
+}
+
+const ensureReminderSheet_ = () => {
+  const spreadsheet = spreadsheet_();
+  const sheet =
+    spreadsheet.getSheetByName("MonthlyReminders") ||
+    spreadsheet.insertSheet("MonthlyReminders");
+  const width = sheet.getLastColumn();
+  const headers = width ? sheet.getRange(1, 1, 1, width).getValues()[0] : [];
+  const existing = columns_(headers);
+  const missing = REMINDER_COLUMNS.filter((name) => {
+    return existing[canonicalHeader_(name)] === undefined;
+  });
+  if (missing.length) {
+    const requiredWidth = width + missing.length;
+    const maximumWidth = sheet.getMaxColumns();
+    if (requiredWidth > maximumWidth) {
+      sheet.insertColumnsAfter(maximumWidth, requiredWidth - maximumWidth);
+    }
+    sheet.getRange(1, width + 1, 1, missing.length).setValues([missing]);
+  }
+  sheet.setFrozenRows(1);
+  return {
+    sheet: sheet,
+    columns: columns_(
+      sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0],
+    ),
+  };
+};
+
+const scriptDate_ = () => {
+  return Utilities.formatDate(
+    new Date(),
+    Session.getScriptTimeZone(),
+    "yyyy-MM-dd",
+  );
+};
+
+const reminderMonth_ = (dateText) => dateText.slice(0, 7);
+
+const isFirstDayOfMonth_ = (dateText) => dateText.slice(8, 10) === "01";
+
+const normalizedEmail_ = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const reminderEnabled_ = (value) => {
+  if (value === undefined || value === "") return true;
+  return !["false", "no", "0", "off"].includes(
+    String(value).trim().toLowerCase(),
+  );
+};
+
+const monthlyReminderBody_ = (name) => {
+  return [
+    `Hello ${String(name || "Member").trim()},`,
+    "",
+    "This is your monthly contribution reminder from Soudagar Welfare Trust.",
+    "Your continued support helps us build a more caring community.",
+    "",
+    "If you have already made this month's contribution, please disregard this reminder.",
+    "For any questions, please reply to this email or contact the trust.",
+    "",
+    "With regards,",
+    "Soudagar Welfare Trust",
+  ].join("\n");
+};
+
+const htmlEscape_ = (value) => {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
+const monthlyReminderHtml_ = (name) => {
+  const safeName = htmlEscape_(name || "Member");
+  const logoUrl =
+    "https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/favicon.svg";
+  return `
+    <div style="margin:0;background:#fbfaf4;padding:32px 16px;font-family:Arial,sans-serif;color:#17382b;">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #dce7dc;border-radius:16px;overflow:hidden;">
+        <div style="background:#075c38;padding:24px;text-align:center;">
+          <img src="${logoUrl}" alt="Soudagar Welfare Trust" width="64" height="64" style="display:inline-block;border-radius:14px;" />
+        </div>
+        <div style="padding:30px 28px;">
+          <p style="margin:0 0 14px;color:#b38a2a;font-size:12px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;">Monthly contribution reminder</p>
+          <h1 style="margin:0 0 18px;color:#075c38;font-size:26px;line-height:1.2;">Hello ${safeName},</h1>
+          <p style="margin:0 0 14px;font-size:16px;line-height:1.6;">This is your monthly contribution reminder from Soudagar Welfare Trust.</p>
+          <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">Your continued support helps us build a more caring community.</p>
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#5c7165;">If you have already made this month's contribution, please disregard this reminder.</p>
+          <div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;">
+            <p style="margin:0;font-size:15px;line-height:1.6;">With warm regards,</p>
+            <p style="margin:4px 0 0;color:#075c38;font-size:16px;font-weight:bold;">Soudagar Welfare Trust</p>
+            <p style="margin:4px 0 0;color:#b38a2a;font-size:12px;letter-spacing:1px;">HUMANITY · SERVICE · UNITY</p>
+          </div>
+        </div>
+      </div>
+    </div>`;
+};
+
+const welcomeEmailHtml_ = (name) => {
+  const safeName = htmlEscape_(name || "Member");
+  const logoUrl =
+    "https://raw.githubusercontent.com/vaseeahmed94/soudagar-welfare-trust/main/src/assets/images/favicon.svg";
+  return `
+    <div style="margin:0;background:#fbfaf4;padding:32px 16px;font-family:Arial,sans-serif;color:#17382b;">
+      <div style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #dce7dc;border-radius:16px;overflow:hidden;">
+        <div style="background:#075c38;padding:24px;text-align:center;">
+          <img src="${logoUrl}" alt="Soudagar Welfare Trust" width="64" height="64" style="display:inline-block;border-radius:14px;" />
+        </div>
+        <div style="padding:30px 28px;">
+          <p style="margin:0 0 14px;color:#b38a2a;font-size:12px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;">Welcome to our community</p>
+          <h1 style="margin:0 0 18px;color:#075c38;font-size:26px;line-height:1.2;">Hello ${safeName},</h1>
+          <p style="margin:0 0 14px;font-size:16px;line-height:1.6;">Thank you for joining Soudagar Welfare Trust.</p>
+          <p style="margin:0 0 20px;font-size:16px;line-height:1.6;">We have received your membership application and will review it shortly. We are grateful for your interest in serving our community together.</p>
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#5c7165;">If you did not submit this application, please contact the trust.</p>
+          <div style="margin-top:28px;padding-top:20px;border-top:1px solid #dce7dc;">
+            <p style="margin:0;font-size:15px;line-height:1.6;">With warm regards,</p>
+            <p style="margin:4px 0 0;color:#075c38;font-size:16px;font-weight:bold;">Soudagar Welfare Trust</p>
+            <p style="margin:4px 0 0;color:#b38a2a;font-size:12px;letter-spacing:1px;">HUMANITY · SERVICE · UNITY</p>
+          </div>
+        </div>
+      </div>
+    </div>`;
+};
+
+const queueMonthlyReminders_ = (today, month) => {
+  if (!isFirstDayOfMonth_(today)) return;
+  const preparedMembers = ensureMemberSheet_();
+  const memberRows = preparedMembers.sheet.getDataRange().getValues();
+  const preparedReminders = ensureReminderSheet_();
+  const reminderSheet = preparedReminders.sheet;
+  const reminderColumns = preparedReminders.columns;
+  const existing = reminderSheet.getDataRange().getValues();
+  const queued = new Set(
+    existing.slice(1).map((row) => {
+      return `${normalizedEmail_(row[reminderColumns.email])}|${row[reminderColumns.remindermonth]}`;
+    }),
+  );
+  const memberColumns = preparedMembers.columns;
+  memberRows.slice(1).forEach((row) => {
+    const email = normalizedEmail_(row[memberColumns.email]);
+    if (
+      !email ||
+      !String(row[memberColumns.name] || "").trim() ||
+      (memberColumns.monthlyreminderenabled !== undefined &&
+        !reminderEnabled_(row[memberColumns.monthlyreminderenabled]))
+    )
+      return;
+    const key = `${email}|${month}`;
+    if (queued.has(key)) return;
+    const output = new Array(reminderSheet.getLastColumn()).fill("");
+    output[reminderColumns.name] = cellText_(row[memberColumns.name]);
+    output[reminderColumns.email] = cellText_(email);
+    output[reminderColumns.remindermonth] = month;
+    output[reminderColumns.status] = "pending";
+    output[reminderColumns.attempts] = 0;
+    reminderSheet.appendRow(output);
+    queued.add(key);
+  });
+};
+
+const sendMonthlyReminder_ = (name, email) => {
+  MailApp.sendEmail({
+    to: email,
+    subject: "Your monthly contribution reminder | Soudagar Welfare Trust",
+    body: monthlyReminderBody_(name),
+    htmlBody: monthlyReminderHtml_(name),
+    name: "Soudagar Welfare Trust",
+    replyTo:
+      PropertiesService.getScriptProperties().getProperty("WELCOME_REPLY_TO") ||
+      "soudagarwelfaretrust@gmail.com",
+  });
+};
+
+/** Daily trigger entry point. Queues on month-start and drains safely over later days. */
+function processMonthlyReminderQueue() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) return;
+  try {
+    const today = scriptDate_();
+    const month = reminderMonth_(today);
+    queueMonthlyReminders_(today, month);
+    const prepared = ensureReminderSheet_();
+    const sheet = prepared.sheet;
+    const columns = prepared.columns;
+    const rows = sheet.getDataRange().getValues();
+    const quota = MailApp.getRemainingDailyQuota();
+    const available = Math.max(
+      0,
+      Math.min(REMINDER_DAILY_SEND_LIMIT, quota - 10),
+    );
+    let sent = 0;
+    rows.slice(1).forEach((row, index) => {
+      if (sent >= available) return;
+      const status = String(row[columns.status] || "").toLowerCase();
+      const attempts = Number(row[columns.attempts] || 0);
+      if (
+        !["pending", "failed"].includes(status) ||
+        attempts >= REMINDER_RETRY_LIMIT
+      )
+        return;
+      const rowNumber = index + 2;
+      try {
+        sendMonthlyReminder_(
+          row[columns.name],
+          normalizedEmail_(row[columns.email]),
+        );
+        sheet
+          .getRange(rowNumber, columns.sentat + 1, 1, 4)
+          .setValues([[new Date().toISOString(), "sent", attempts + 1, ""]]);
+        sent += 1;
+      } catch (error) {
+        const message =
+          error && error.message ? error.message : "Unknown email error";
+        sheet
+          .getRange(rowNumber, columns.sentat + 1, 1, 4)
+          .setValues([["", "failed", attempts + 1, message.slice(0, 200)]]);
+        Logger.log("Monthly reminder failed: " + message);
+      }
+    });
+    SpreadsheetApp.flush();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** Run once to create the daily queue trigger. */
+function setupMonthlyReminderTrigger() {
+  ScriptApp.getProjectTriggers().forEach((trigger) => {
+    if (trigger.getHandlerFunction() === "processMonthlyReminderQueue")
+      ScriptApp.deleteTrigger(trigger);
+  });
+  ScriptApp.newTrigger("processMonthlyReminderQueue")
+    .timeBased()
+    .everyDays(1)
+    .atHour(9)
+    .create();
 }
 
 const displayConsent_ = (value) => {
@@ -234,13 +522,15 @@ const welcomeEmail_ = (name, email) => {
     "",
     "If you did not submit this application, please contact the trust.",
     "",
-    "With regards,",
+    "With warm regards,",
     "Soudagar Welfare Trust",
+    "HUMANITY · SERVICE · UNITY",
   ].join("\n");
   MailApp.sendEmail({
     to: email,
     subject: subject,
     body: body,
+    htmlBody: welcomeEmailHtml_(name),
     name: "Soudagar Welfare Trust",
     replyTo:
       PropertiesService.getScriptProperties().getProperty("WELCOME_REPLY_TO") ||
@@ -256,7 +546,11 @@ const sendWelcomeEmail_ = (sheet, columns, name, email, rowNumber) => {
         .getRange(rowNumber, columns.welcomeemailstatus + 1, 1, 2)
         .setValues([["sent", new Date().toISOString()]]);
     }
-  } catch {
+  } catch (error) {
+    Logger.log(
+      "Welcome email failed: " +
+        (error && error.message ? error.message : "Unknown email error"),
+    );
     if (columns.welcomeemailstatus !== undefined) {
       sheet
         .getRange(rowNumber, columns.welcomeemailstatus + 1, 1, 2)
@@ -308,6 +602,7 @@ function doPost(e) {
       email: cellText_(email),
       phone: cellText_(data.phone),
       publicconsent: data.publicConsent,
+      monthlyreminderenabled: true,
       welcomeemailstatus: "pending",
       welcomeemailsentat: "",
     };
