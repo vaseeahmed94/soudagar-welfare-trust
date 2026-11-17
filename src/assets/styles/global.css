@@ -2280,13 +2280,13 @@ button:disabled {
     display: none;
   }
 }
-:root:is([lang="hi"], [lang="kn"]) .brand > span {
+:root[lang="kn"] .brand > span {
   line-height: 1.3;
   letter-spacing: 0;
 }
-:root:is([lang="hi"], [lang="kn"]) .hero h1 {
+:root[lang="kn"] .hero h1 {
   line-height: 1.2;
 }
-:root:is([lang="hi"], [lang="kn"]) .navigation > a {
+:root[lang="kn"] .navigation > a {
   white-space: nowrap;
 }

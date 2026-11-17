@@ -1,6 +1,6 @@
 import type english from "../locales/en.json";
 
-export type Language = "en" | "hi" | "kn";
+export type Language = "en" | "kn";
 export type TranslationKey = keyof typeof english;
 export type TranslationValues = Readonly<Record<string, string | number>>;
 

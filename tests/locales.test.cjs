@@ -13,19 +13,18 @@ const {
 } = require("../src/locales/config.ts");
 const { getMembershipErrorKey } = require("../src/locales/membershipErrors.ts");
 const english = require("../src/locales/en.json");
-const hindi = require("../src/locales/hi.json");
 const kannada = require("../src/locales/kn.json");
-const catalogs = { en: english, hi: hindi, kn: kannada };
+const catalogs = { en: english, kn: kannada };
 
-test("English is the default, followed by Hindi and Kannada", () => {
+test("English is the default, followed by Kannada", () => {
   assert.equal(DEFAULT_LANGUAGE, "en");
   assert.deepEqual(
     SUPPORTED_LANGUAGES.map(({ code }) => code),
-    ["en", "hi", "kn"],
+    ["en", "kn"],
   );
   for (const value of [null, undefined, "", "en", "ur", "invalid", "__proto__"])
     assert.equal(resolveLanguage(value), "en");
-  assert.equal(resolveLanguage("hi"), "hi");
+  assert.equal(resolveLanguage("hi"), "en");
   assert.equal(resolveLanguage("kn"), "kn");
 });
 
@@ -49,10 +48,6 @@ test("catalogs have matching semantic keys, text, and interpolation placeholders
 });
 
 test("messages fall back to English without interpreting inherited object properties", () => {
-  assert.equal(
-    translateMessage(hindi, english, "members.heading"),
-    "हमारे सदस्य",
-  );
   assert.equal(translateMessage({}, english, "members.heading"), "Our Members");
   assert.equal(
     translateMessage(kannada, english, "members.heading"),
@@ -64,18 +59,14 @@ test("messages fall back to English without interpreting inherited object proper
     }),
     "ಭಾಷೆ: ಕನ್ನಡ",
   );
-  assert.equal(translateMessage(hindi, english, "missing.key"), "missing.key");
-  assert.equal(translateMessage(hindi, english, "__proto__"), "__proto__");
-  assert.equal(
-    translateMessage(hindi, english, "testimonials.showLabel", { number: 2 }),
-    "प्रशंसापत्र 2 दिखाएँ",
-  );
+  assert.equal(translateMessage({}, english, "missing.key"), "missing.key");
+  assert.equal(translateMessage({}, english, "__proto__"), "__proto__");
 });
 
 test("saved language preferences are honored and inaccessible storage falls back to English", () => {
   assert.equal(
     readLanguagePreference(() => "hi"),
-    "hi",
+    "en",
   );
   assert.equal(
     readLanguagePreference(() => "kn"),
@@ -106,8 +97,6 @@ test("member totals use language-appropriate plurals and Indian number formattin
     formatMemberCountMessage(english, english, 123456, "en-IN"),
     "1,23,456 community members",
   );
-  assert.equal(formatMemberCountMessage(hindi, english, 1, "hi-IN"), "1 सदस्य");
-  assert.equal(formatMemberCountMessage(hindi, english, 2, "hi-IN"), "2 सदस्य");
   assert.equal(
     formatMemberCountMessage(kannada, english, 1, "kn-IN"),
     "1 ಸಮುದಾಯ ಸದಸ್ಯರು",
@@ -158,7 +147,6 @@ test("known legacy registration errors use locale keys and unknown errors get a 
   ]) {
     const key = getMembershipErrorKey(error);
     assert.equal(key, "membership.errors.submit");
-    assert.ok(hindi[key]);
     assert.ok(kannada[key]);
   }
 });

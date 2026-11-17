@@ -73,9 +73,9 @@ Reference: [Tailwind's Vite integration](https://tailwindcss.com/docs/installati
 
 ## Languages
 
-English is the default language; the top-bar selector lists English, Hindi (हिन्दी), and Kannada (ಕನ್ನಡ), in that order. Language selection is saved in browser storage and synchronized between tabs, independently of the color theme. The page language, direction, title, and description update with the selection. Member names, contact details, image filenames, and API payloads remain unchanged.
+English is the default language; the top-bar selector lists English and Kannada (ಕನ್ನಡ), in that order. Language selection is saved in browser storage and synchronized between tabs, independently of the color theme. The page language, direction, title, and description update with the selection. Member names, contact details, image filenames, and API payloads remain unchanged.
 
-`src/locales/` contains English (`en.json`), Hindi (`hi.json`), and Kannada (`kn.json`) catalogs. All catalogs use stable semantic keys grouped by feature, such as `navigation.home` and `membership.consentLegend`. Translate full sentences rather than joining translated fragments. `catalogs.ts` checks catalog completeness; missing messages fall back to English.
+`src/locales/` contains English (`en.json`) and Kannada (`kn.json`) catalogs. All catalogs use stable semantic keys grouped by feature, such as `navigation.home` and `membership.consentLegend`. Translate full sentences rather than joining translated fragments. `catalogs.ts` checks catalog completeness; missing messages fall back to English.
 
 `config.ts` defines the language order, default, text direction, and regional formatting. `LocaleProvider.tsx` and `useLocale.ts` expose typed `t(key, values)`, `formatNumber`, and `formatMemberCount` helpers. TypeScript rejects unknown keys, missing interpolation values, and incorrect value types. Content constants store `titleKey`, `labelKey`, and related keys instead of English copy. `membershipErrors.ts` maps existing Apps Script messages to locale keys and gives unknown failures a translated fallback.
 
@@ -159,7 +159,7 @@ Membership applications are sent to the configured Apps Script backend. Verify i
 - `src/components/dialogs/`: membership form, member directory, gallery lightbox, activity details, and policy content.
 - `src/components/dialogs/AppDialog.tsx`: dialog lifecycle and membership submission state.
 - `src/hooks/`: member fetching, theme, and language state access.
-- `src/locales/`: English, Hindi, and Kannada messages, locale configuration, and provider.
+- `src/locales/`: English and Kannada messages, locale configuration, and provider.
 - `src/services/`: membership API requests and response validation.
 - `src/constants/`: separate files for activities, gallery captions, testimonials, and navigation.
 - `src/types/`: shared domain types in `*.types.ts` files.
